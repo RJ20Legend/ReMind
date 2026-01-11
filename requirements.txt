@@ -1,0 +1,31 @@
+# Backend & API
+fastapi
+uvicorn
+starlette
+python-dotenv
+sqlalchemy
+psycopg2-binary
+redis
+
+# AI & Machine Learning
+numpy
+pandas
+scipy
+matplotlib
+plotly
+altair
+pydeck
+tensorflow
+keras
+torch
+transformers
+scikit-learn
+openai
+
+# Testing & Scheduling
+pytest
+schedule
+
+# Vector DB (choose one)
+faiss-cpu        # optional, or chromadb
+# chromadb
