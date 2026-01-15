@@ -1,17 +1,5 @@
-# Node modules
-frontend/node_modules/
-backend/__pycache__/
+node_modules/
+.next/
+.env
+__pycache__/
 *.pyc
-
-# VSCode settings
-.vscode/
-
-# Python virtual environment
-ai_env/
-
-# Logs
-*.log
-
-# OS files
-.DS_Store
-Thumbs.db
