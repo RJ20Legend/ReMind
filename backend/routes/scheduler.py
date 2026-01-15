@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from ..database import get_db
-from ..models.memory import ConceptMemory
-from ..agents.scheduler import priority
+from backend.database import get_db
+from backend.models.memory import ConceptMemory
+from backend.agents.scheduler import priority
 
 router = APIRouter(prefix="/scheduler")
 

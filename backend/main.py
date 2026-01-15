@@ -1,15 +1,18 @@
-from fastapi import APIRouter
+from fastapi import FastAPI
+from backend.routes import memory as memory_routes
+from backend.routes import scheduler as scheduler_routes
 
-from routes import memory as memory_routes
-from routes import scheduler as scheduler_routes
+app = FastAPI(title="ReMind Backend")
 
-router = APIRouter()
+# Include routers
+app.include_router(memory_routes.router)
+app.include_router(scheduler_routes.router)
+
+@app.get("/")
+def root():
+    return {"message": "ReMind backend is running!"}
 
 
-@router.get('/health')
+@app.get('/health')
 def health():
     return {'status': 'ok'}
-
-
-router.include_router(memory_routes.router)
-router.include_router(scheduler_routes.router)

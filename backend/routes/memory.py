@@ -2,9 +2,39 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
-from brain import users, event_log, process, schedule
+from backend.brain import users, event_log, process, schedule
 
 router = APIRouter(prefix="/memory")
+
+
+@router.get("/dashboard")
+def dashboard():
+    """Get retention dashboard summary."""
+    if not event_log:
+        return {
+            "overall_retention": 0.0,
+            "weak_concepts": [],
+            "reviews_due_today": 0,
+            "total_events": 0
+        }
+    
+    # Calculate average retention from recent events
+    recent_events = event_log[-100:] if len(event_log) > 100 else event_log
+    avg_retention = sum(e.get("memory_strength", 0.5) for e in recent_events) / len(recent_events) if recent_events else 0.5
+    
+    # Find weak concepts (memory_strength < 0.5)
+    weak = []
+    for user_id, concepts in users.items():
+        for concept_id, state in concepts.items():
+            if state.get("memory_strength", 1.0) < 0.5:
+                weak.append(concept_id)
+    
+    return {
+        "overall_retention": round(avg_retention, 2),
+        "weak_concepts": list(set(weak))[:10],  # Top 10 weak concepts
+        "reviews_due_today": sum(len(c) for c in users.values()),  # Total concepts
+        "total_events": len(event_log)
+    }
 
 
 class SubmitRecallPayload(BaseModel):
@@ -40,7 +70,7 @@ def submit_recall(payload: SubmitRecallPayload):
     
     # Get or create memory state for this concept
     if payload.concept_id not in user_concepts:
-        from ..brain import DEFAULT_STATE
+        from backend.brain.state import DEFAULT_STATE
         user_concepts[payload.concept_id] = DEFAULT_STATE.copy()
     
     concept_state = user_concepts[payload.concept_id]
@@ -71,6 +101,23 @@ def submit_recall(payload: SubmitRecallPayload):
     # Generate study plan: top 5 concepts to study next
     study_plan = schedule(user_concepts)
     
+    # Calculate updated dashboard
+    recent_events = event_log[-100:] if len(event_log) > 100 else event_log
+    avg_retention = sum(e.get("memory_strength", 0.5) for e in recent_events) / len(recent_events) if recent_events else 0.5
+    
+    weak = []
+    for uid, concepts in users.items():
+        for cid, state in concepts.items():
+            if state.get("memory_strength", 1.0) < 0.5:
+                weak.append(cid)
+    
+    dashboard_data = {
+        "overall_retention": round(avg_retention, 2),
+        "weak_concepts": list(set(weak))[:10],
+        "reviews_due_today": sum(len(c) for c in users.values()),
+        "total_events": len(event_log)
+    }
+    
     # Return response
     return {
         "success": True,
@@ -82,7 +129,8 @@ def submit_recall(payload: SubmitRecallPayload):
             "failed_recalls": updated_state["failed_recalls"],
             "review_window": updated_state["review_window"]
         },
-        "next_study_plan": study_plan
+        "next_study_plan": study_plan,
+        "dashboard": dashboard_data
     }
 
 
